@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Simple Test</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+</head>
+<body>
+  <input id="txtUrl" type="text" style="width: 400px;" value="http://www.google.com" />
+  <button onclick="redirectFunction()">REDIRECT</button>
+  
+  <script>
+	function redirectFunction() {
+	
+		const referrer = document.referrer;
+		console.log('document.referrer: ' + referrer);
+		
+		const whiteListUrls = ['http://www.google.com'];
+		
+		const url = document.getElementById("txtUrl").value;
+		console.log('url: ' + url);
+				
+		if(url && whiteListUrls.includes(url)){
+			console.log('About to redirect to: ' + url);
+			// window.location.href = '...'
+			this.document.location.href = url;
+		} else {
+		  console.log('URL value not allowed.');
+		}		
+	 
+	}
+</script>
+</body>
+</html>
