@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Document 2 - Simple Test</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://code.jquery.com/jquery-3.5.1.js" integrity="sha256-QWo7LDvxbWT2tbbQ97B53yJnYU3WhH/C8ycbRAkjPDc=" crossorigin="anonymous"></script>
+</head>
+<body>
+  <h2>Document 2 - Test Page 1</h2>
+  <a href="file:///C:/Users/mhoque/Downloads/simple_page_1.html">Doc 1</a>
+  <a href="file:///C:/Users/mhoque/Downloads/simple_page_2.html">Doc 2</a>
+  <hr />
+  <br />
+  <p>Testing redirect using "includes"</p>
+  <input id="txtUrl" type="text" style="width: 400px;" value="http://www.google.com" />
+  <button id="btnRedirect" onclick="redirectFunction()">REDIRECT</button>
+  <button id="btnRedirect" onclick="RedirectBasedOnReferrer()">REDIRECT (Ref)</button>
+  <br />
+  <br />
+  <hr />
+  <br />
+  <button id="btnOptions" onclick="optionRequest()">SEND OPTIONS</button>
+  <br />
+  <div id="dvXmlHttpRequestMessage"></div>
+  <br />
+  <br />
+  <hr />
+  <br />
+  <p>Testing websocket</p>
+  <input id="txtEcho" type="text" style="width: 400px;" value="Hello World" />
+  <button id="btnWebSocket" onclick="websocketEcho()">WebSocket Echo Test</button>
+  <button id="btnClear" onclick="clearDiv()">Clear</button>
+  <br />
+  <div id="output"></div>
+  <hr />
+  <script>
+  
+	$(document).ready(function() {
+		console.log('document ready occurred!');
+		console.log('document.referrer: ' + document.referrer)
+	});
+
+	$(window).bind('beforeunload', function(){		
+		console.log('Moving away...');
+	});
+	
+	window.addEventListener("beforeunload", function() { 
+		debugger; 
+	}, false)
+  
+	function redirectFunction() {
+	
+		const referrer = document.referrer;
+		console.log('document.referrer: ' + referrer);
+		console.log('Current Location: ' + window.location);
+		
+		const whiteListUrls = ['http://www.google.com'];
+		
+		const url = document.getElementById("txtUrl").value;
+						
+		if(url && whiteListUrls.includes(url)){
+			console.log('About to redirect to: ' + url);
+			/* According to the W3C, they are the same. In reality, for cross browser safety, you should use window.location rather than document.location.*/
+			
+			try {				
+				// window.location.href = url;
+				window.open(url, '_self');
+				// this.document.location.href = url;				
+				
+			} catch(e) {
+				console.log(e);
+			}
+			
+		} else {
+		  console.log("URL value not allowed.");
+		}	 
+	}
+	
+	function RedirectBasedOnReferrer() {
+		const referrer = document.referrer;
+		console.log('document.referrer: ' + referrer);
+		console.log('Current Location: ' + window.location);
+				
+		const whiteListUrls = ['http://www.google.com'];
+		const url = document.getElementById("txtUrl").value;
+		
+		if(url && document.referrer) {
+			const referrerArray = document.referrer.split('/');
+			
+			if(referrerArray.length >= 2 && whiteListUrls.indexOf(url) <= -1) {
+				console.log('Redirecting to ' + url);
+				window.location.href = url;
+			} else {
+				console.log('Redirect logic failed.');
+			}		
+			
+		}else {
+			console.log('Unable to process based on Redirect URL ('+ url +') or Referrer ('+ referrer +')');
+		}		
+	}
+	
+	function optionRequest () {
+	
+		var request = new XMLHttpRequest();
+		request.onreadystatechange = function () { 
+			/*	this.readyState == 4
+				0: request not initialized
+				1: server connection established
+				2: request received
+				3: processing request
+				4: request finished and response is ready 
+			*/
+				
+			document.getElementById("dvXmlHttpRequestMessage").innerHTML += "<br /><br /><b>Status Text:</b> " + this.statusText
+			document.getElementById("dvXmlHttpRequestMessage").innerHTML += "<br /><b>Response Text:</b> " + this.responseText;
+			// console.log(this);
+						
+			if (this.readyState == 4 && this.status == 200) {
+				document.getElementById("dvXmlHttpRequestMessage").innerHTML += "<br /><b>Headers:</b> " + this.getAllResponseHeaders();
+			}
+			
+			if(this.readyState == this.HEADERS_RECEIVED){
+				var headers = this.getAllResponseHeaders();
+				
+				// Convert the header string into an array of individual headers
+				var arr = headers.trim().split(/[\r\n]+/);
+				
+				// Create a map of header names to values
+				var headerMap = {};
+				arr.forEach(function (line) {
+				  var parts = line.split(': ');
+				  var header = parts.shift();
+				  var value = parts.join(': ');				  
+				  headerMap[header] = value;
+				});
+			}			
+		};
+		
+		request.onload = function(e) {
+			console.log('Evoked onLoan event function.');
+			console.log(e);
+		};
+
+		request.onerror = function(e) {
+			// console.error('Evoked onError event function.');
+			console.log(e);
+		};
+		
+		request.open("OPTIONS", "https://webhook.site/2836b436-3fec-4774-8ce0-3435ad96f29c");
+		// request.setRequestHeader("User-Agent", "TestPage");
+		request.setRequestHeader("Accept", "*/*");
+		request.setRequestHeader("Cache-Control", "no-cache");
+		// request.setRequestHeader("Host", "webhook.site");
+		// request.setRequestHeader("Accept-Encoding", "gzip, deflate, br");
+		// request.setRequestHeader("Connection", "keep-alive");		
+				
+		request.send();
+		
+		if(request.readyState == 4 && IsRequestSuccessful(request)) {
+				if (request.getAllResponseHeaders) {
+					var headers = request.getAllResponseHeaders ();
+					alert (headers);
+				}
+			}
+	}
+	
+	function transferComplete(evt) {
+	  console.log("The transfer is complete.");
+	  document.getElementById("dvXmlHttpRequestMessage").innerHTML += "<br/>The transfer is complete.";
+	}
+	
+	function websocketEcho() {
+	
+		console.log("Echo Test Button Click");			
+		
+		if (navigator.onLine) {
+		   console.log("You are Online");
+		   init();
+		}else {
+		   console.log("You are Offline");
+		}
+	}
+	
+	function clearDiv(){
+		if(output){
+			output.innerHTML = "";
+		}
+	}
+	
+	var output;
+
+	function init()
+	{
+		output = document.getElementById("output");
+		const echoValue = document.getElementById("txtEcho").value;
+		
+		if(!echoValue){
+			console.log('Value not allowed.');
+			return;
+		}
+		
+		var websocket = new WebSocket("wss://echo.websocket.org/");
+		
+		const start = Date.now();	
+		
+		websocket.onopen = function(evt) { 
+			writeToScreen("<br />CONNECTED");
+			writeToScreen("SENT: " + echoValue);
+			websocket.send(echoValue);
+			websocket.send("sfdsffasd");
+		};		
+		
+		websocket.onclose = function(evt) { 
+			writeToScreen("DISCONNECTED");
+		};
+		
+		websocket.onmessage = function(evt) { 
+			const millis = Date.now() - start;
+			console.log(evt);
+			writeToScreen('<span style="color: teal;">RESPONSE: ' + evt.data+'</span>');
+			// writeToScreen(`ELAPED TIME: ${millis} ms.`); -> Breaks in IE11
+			writeToScreen('ELAPED TIME: ' + millis + ' ms.');
+			websocket.close();
+		};
+		
+		websocket.onerror = function(evt) { 
+			writeToScreen('<span style="color: red;">ERROR:</span> ' + evt.data); 
+		};
+	}
+
+	function writeToScreen(message)
+	{
+		var pre = document.createElement("p");
+		pre.style.wordWrap = "break-word";
+		pre.innerHTML = message;
+		output.appendChild(pre);
+		console.log(message);
+	}	
+</script>
+</body>
+</html>
